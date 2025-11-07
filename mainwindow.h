@@ -1,24 +1,50 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QList>
 #include <QMainWindow>
-#include <QGraphicsScene>
-QT_BEGIN_NAMESPACE
-namespace Ui {
-class MainWindow;
-}
-QT_END_NAMESPACE
+
+class Canvas;
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    MainWindow();
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
+private slots:
+    void Save();
+    void PenColor();
+    void PenWidth();
+    void SetPenTool();
+    void SetLineTool();
+    void SetRectangleTool();
+    void SetEllipsTool();
 
 private:
-    Ui::MainWindow *ui;
-    QGraphicsScene *scene;
+    void CreateActions();
+    void CreateMenus();
+    bool MaybeSave();
+    bool SaveFile(const QByteArray &fileFormat);
+
+    Canvas *canvas;
+    QMenu *SaveAsMenu;
+    QMenu *FileMenu;
+    QMenu *OptionMenu;
+    QMenu *ToolMenu;
+    QList<QAction *> SaveAsActs;
+    QAction *ExitAct;
+    QAction *PenColorAct;
+    QAction *PenWidthAct;
+    QAction *ClearScreenAct;
+    QAction *PenToolAct;
+    QAction *LineToolAct;
+    QAction *RectangleToolAct;
+    QAction *EllipsToolAct;
 };
-#endif // MAINWINDOW_H
+
+#endif
