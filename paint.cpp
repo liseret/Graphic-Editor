@@ -57,7 +57,7 @@ void Canvas::mousePressEvent(QMouseEvent *ev){
         LastPoint=ev->pos();
         if(CurrentShape){
             CurrentShape->SetStartPoint(ev->pos());
-            if(CurrentShape->getType()==Tool::pen) {
+            if(CurrentShape->GetType()==Tool::pen) {
                 Pen* pen=static_cast<Pen*>(CurrentShape);
                 pen->addPoint(ev->pos());
             }
@@ -68,7 +68,7 @@ void Canvas::mousePressEvent(QMouseEvent *ev){
 
 void Canvas::mouseMoveEvent(QMouseEvent *ev){
     if ((ev->buttons() & Qt::LeftButton) && PaintOrNot && CurrentShape) {
-        if(CurrentShape->getType() == Tool::pen){
+        if(CurrentShape->GetType() == Tool::pen){
             DrawLineTo(ev->pos());
             Pen* pen=static_cast<Pen*>(CurrentShape);
             pen->addPoint(ev->pos());
@@ -82,7 +82,7 @@ void Canvas::mouseMoveEvent(QMouseEvent *ev){
 
 void Canvas::mouseReleaseEvent(QMouseEvent *ev){
     if (ev->button()==Qt::LeftButton && PaintOrNot && CurrentShape) {
-        if (CurrentShape->getType()==Tool::pen) {
+        if (CurrentShape->GetType()==Tool::pen) {
             DrawLineTo(ev->pos());
             Pen* pen=static_cast<Pen*>(CurrentShape);
             pen->addPoint(ev->pos());
@@ -99,7 +99,7 @@ void Canvas::paintEvent(QPaintEvent *ev){
     QPainter painter(this);
     QRect dirtyRect=ev->rect();
     painter.drawImage(dirtyRect,Image,dirtyRect);
-    if (PaintOrNot && CurrentShape && CurrentShape->getType()!=Tool::pen) {
+    if (PaintOrNot && CurrentShape && CurrentShape->GetType()!=Tool::pen) {
         CurrentShape->draw(painter);
     }
 }

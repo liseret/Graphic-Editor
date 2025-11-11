@@ -10,6 +10,8 @@
 #include <QPen>
 #include <QRect>
 #include <QVector>
+#include <QDir>
+
 
 class Tool
 {
@@ -20,12 +22,12 @@ protected:
     int PenWidth;
 
 public:
-    enum Type {pen,line,rectangle,ellips};
+    enum Type {pen,line,rectangle,ellips,bruh};
 
     Tool(const QColor &color, int width) : PenColor(color), PenWidth(width) {};
     virtual ~Tool() = default;
     virtual void draw(QPainter &painter) = 0;
-    virtual Type getType() const = 0;
+    virtual Type GetType() const = 0;
 
     void SetStartPoint(const QPoint &point){
         StartPoint = point;
@@ -38,6 +40,20 @@ public:
     }
     void SetPenWidth(int width){
         PenWidth = width;
+    }
+};
+class Bruh:public Tool{
+private:
+    QImage BrImg;
+public:
+    Bruh(const QColor &color, int width, const QImage &image):Tool(color, width), BrImg(image) {};
+    void draw(QPainter &painter) override {
+    }
+    Type GetType() const override{
+        return bruh;
+    }
+    void SetBrushImage(const QImage &image) {
+        BrImg = image;
     }
 };
 
@@ -54,7 +70,7 @@ public:
             painter.drawLine(Points[i-1],Points[i]);
         }
     }
-    Type getType() const override{
+    Type GetType() const override{
         return pen;
     }
     void addPoint(const QPoint &point){
@@ -73,7 +89,7 @@ public:
         painter.setPen(QPen(PenColor,PenWidth,Qt::SolidLine,Qt::RoundCap,Qt::RoundJoin));
         painter.drawLine(StartPoint,EndPoint);
     }
-    Type getType() const override {
+    Type GetType() const override {
         return line;
     }
 };
@@ -87,7 +103,7 @@ public:
         painter.drawRect(rect);
     }
 
-    Type getType() const override {
+    Type GetType() const override {
         return rectangle;
     }
 };
@@ -99,7 +115,7 @@ public:
         QRect rect=QRect(StartPoint,EndPoint).normalized();
         painter.drawEllipse(rect);
     }
-    Type getType() const override {
+    Type GetType() const override {
         return ellips;
     }
 };

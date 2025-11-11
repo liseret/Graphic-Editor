@@ -135,18 +135,18 @@ void MainWindow::PenColor(){
 
 void MainWindow::PenWidth(){
     bool ok;
-    int newWidth=QInputDialog::getInt(this,tr("Select width"),tr("Select pen width (from 1 to 100) :"),canvas->PenWidth(),1,100,1,&ok);
+    int a=QInputDialog::getInt(this,tr("Select width"),tr("Select pen width (from 1 to 100) :"),canvas->PenWidth(),1,100,1,&ok);
     if(ok)
-        canvas->SetPenWidth(newWidth);
+        canvas->SetPenWidth(a);
 }
 
 bool MainWindow::MaybeSave(){
     if (canvas->IsModified()){
-        auto ret = QMessageBox::question(this,tr("Save Changes"),tr("The image has been modified.\nDo you want to save your changes?"),tr("Yep"),tr("Nope"),tr("Cancel"),0,2);
-        if (ret==0){
+        auto a = QMessageBox::question(this,tr("Save Changes"),tr("The image has been modified.\nDo you want to save your changes?"),tr("Yep"),tr("Nope"),tr("Cancel"),0,2);
+        if (a==0){
             return SaveFile("png");
         }
-        else if(ret==2) {
+        else if(a==2) {
             return false;
         }
     }
