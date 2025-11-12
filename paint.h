@@ -48,6 +48,14 @@ private:
 public:
     Bruh(const QColor &color, int width, const QImage &image):Tool(color, width), BrImg(image) {};
     void draw(QPainter &painter) override {
+        if (!BrImg.isNull()){
+            int size = qMax(10, PenWidth * 5);
+            QImage SizeBrush = BrImg.scaled(size, size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            QPoint drawPoint = StartPoint;
+            drawPoint.rx() = drawPoint.rx() - SizeBrush.width() / 2;
+            drawPoint.ry() = drawPoint.ry() - SizeBrush.height() / 2;
+            painter.drawImage(drawPoint, SizeBrush);
+        }
     }
     Type GetType() const override{
         return bruh;
@@ -55,6 +63,7 @@ public:
     void SetBrushImage(const QImage &image) {
         BrImg = image;
     }
+
 };
 
 
@@ -137,6 +146,9 @@ public:
         else if (type==Tool::ellips){
             return new Ellips(color,width);
         }
+        else if (type==Tool::bruh){
+            return new Bruh(color, width, QImage());
+        }
         return nullptr;
     }
 };
@@ -162,6 +174,10 @@ private:
     Tool* CurrentShape;
     QPoint LastPoint;
     EditControl ShapeControl;
+    QVector<QImage> BruhImag;
+    int BruhIndex;
+
+    void DrawBrush(const QPoint &point);
 public:
     Canvas(QWidget *parent=0);
     ~Canvas();
@@ -179,6 +195,15 @@ public:
     int PenWidth() const{
         return MyPenWidth;
     }
+    void LoadBruh();
+    void SetBrushIndex(int i);
+    int GetBrushCount() const{
+        return BruhImag.size();
+    }
+    int GetCurrentBrushIndex() const{
+        return BruhIndex;
+    }
+    QImage GetBrushImage(int i) const;
 
 public slots:
     void ClearImage();

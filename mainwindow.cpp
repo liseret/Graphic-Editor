@@ -7,6 +7,7 @@ MainWindow::MainWindow(){
     setCentralWidget(canvas);
     CreateActions();
     CreateMenus();
+
     setWindowTitle(tr("Graphic editor"));
     resize(500,500);
 }
@@ -20,56 +21,60 @@ void MainWindow::CreateActions(){
         SaveAsActs.append(action);
     }
 
-    ExitAct=new QAction(tr("&Exit"),this);
+    ExitAct=new QAction(tr("Exit"),this);
     ExitAct->setShortcuts(QKeySequence::Quit);
     connect(ExitAct,SIGNAL(triggered()),this,SLOT(close()));
 
-    PenColorAct=new QAction(tr("&Pen Color..."),this);
+    PenColorAct=new QAction(tr("Pen Color..."),this);
     connect(PenColorAct,SIGNAL(triggered()),this,SLOT(PenColor()));
 
-    PenWidthAct=new QAction(tr("Pen &Width..."),this);
+    PenWidthAct=new QAction(tr("Pen Width..."),this);
     connect(PenWidthAct,SIGNAL(triggered()),this,SLOT(PenWidth()));
 
-    ClearScreenAct=new QAction(tr("&Clear Screen"),this);
+    ClearScreenAct=new QAction(tr("Clear Screen"),this);
     ClearScreenAct->setShortcut(tr("Ctrl+L"));
-    connect(ClearScreenAct, SIGNAL(triggered()),
-            canvas,SLOT(ClearImage()));
+    connect(ClearScreenAct, SIGNAL(triggered()),canvas,SLOT(ClearImage()));
 
-    PenToolAct=new QAction(tr("&Pen"),this);
+    PenToolAct=new QAction(tr("Pen"),this);
     PenToolAct->setCheckable(true);
     PenToolAct->setChecked(true);
     connect(PenToolAct,SIGNAL(triggered()),this,SLOT(SetPenTool()));
 
-    LineToolAct=new QAction(tr("&Line"),this);
+    LineToolAct=new QAction(tr("Line"),this);
     LineToolAct->setCheckable(true);
     connect(LineToolAct,SIGNAL(triggered()),this,SLOT(SetLineTool()));
 
-    RectangleToolAct=new QAction(tr("&Rectangle"),this);
+    RectangleToolAct=new QAction(tr("Rectangle"),this);
     RectangleToolAct->setCheckable(true);
     connect(RectangleToolAct,SIGNAL(triggered()),this,SLOT(SetRectangleTool()));
 
-    EllipsToolAct=new QAction(tr("&Ellips"),this);
+    EllipsToolAct=new QAction(tr("Ellips"),this);
     EllipsToolAct->setCheckable(true);
     connect(EllipsToolAct,SIGNAL(triggered()),this,SLOT(SetEllipsTool()));
-}
 
+    ImageBrushToolAct = new QAction(tr("Image Brush"), this);
+    ImageBrushToolAct->setCheckable(true);
+    connect(ImageBrushToolAct, SIGNAL(triggered()), this, SLOT(SetImageBrushTool()));
+    CreateBrushActions();
+}
 void MainWindow::CreateMenus(){
-    SaveAsMenu=new QMenu(tr("&Save As"),this);
+    SaveAsMenu=new QMenu(tr("Save As"),this);
     for (QAction *action:SaveAsActs) {
         SaveAsMenu->addAction(action);
     }
 
-    FileMenu=new QMenu(tr("&File"),this);
+    FileMenu=new QMenu(tr("File"),this);
     FileMenu->addMenu(SaveAsMenu);
     FileMenu->addSeparator();
 
-    ToolMenu=new QMenu(tr("&Tools"),this);
+    ToolMenu=new QMenu(tr("Tools"),this);
     ToolMenu->addAction(PenToolAct);
     ToolMenu->addAction(LineToolAct);
     ToolMenu->addAction(RectangleToolAct);
     ToolMenu->addAction(EllipsToolAct);
+    ToolMenu->addAction(ImageBrushToolAct);
 
-    OptionMenu=new QMenu(tr("&Options"),this);
+    OptionMenu=new QMenu(tr("Options"),this);
     OptionMenu->addAction(PenColorAct);
     OptionMenu->addAction(PenWidthAct);
     OptionMenu->addSeparator();
@@ -86,6 +91,7 @@ void MainWindow::SetPenTool(){
     LineToolAct->setChecked(false);
     RectangleToolAct->setChecked(false);
     EllipsToolAct->setChecked(false);
+    ImageBrushToolAct->setChecked(false);
 }
 
 void MainWindow::SetLineTool(){
@@ -94,6 +100,7 @@ void MainWindow::SetLineTool(){
     LineToolAct->setChecked(true);
     RectangleToolAct->setChecked(false);
     EllipsToolAct->setChecked(false);
+    ImageBrushToolAct->setChecked(false);
 }
 
 void MainWindow::SetRectangleTool(){
@@ -102,6 +109,7 @@ void MainWindow::SetRectangleTool(){
     LineToolAct->setChecked(false);
     RectangleToolAct->setChecked(true);
     EllipsToolAct->setChecked(false);
+    ImageBrushToolAct->setChecked(false);
 }
 
 void MainWindow::SetEllipsTool(){
@@ -110,6 +118,17 @@ void MainWindow::SetEllipsTool(){
     LineToolAct->setChecked(false);
     RectangleToolAct->setChecked(false);
     EllipsToolAct->setChecked(true);
+    ImageBrushToolAct->setChecked(false);
+}
+void MainWindow::SetImageBrushTool()
+{
+    canvas->SetCurrentShape(Tool::bruh);
+    PenToolAct->setChecked(false);
+    LineToolAct->setChecked(false);
+    RectangleToolAct->setChecked(false);
+    EllipsToolAct->setChecked(false);
+    ImageBrushToolAct->setChecked(true);
+    ShowBrushSelectionMenu();
 }
 
 void MainWindow::closeEvent(QCloseEvent *ev){
@@ -162,4 +181,61 @@ bool MainWindow::SaveFile(const QByteArray &fileFormat){
     else{
         return canvas->SaveImage(FileName, fileFormat.constData());
     }
+}
+void MainWindow::UpdateBrushesMenu()
+{
+    int currentIndex = canvas->GetCurrentBrushIndex();
+    for (int i = 0; i < BrushActions.size(); ++i) {
+        BrushActions[i]->setChecked(i == currentIndex);
+    }
+}
+void MainWindow::SelectBrush()
+{
+    QAction *action = qobject_cast<QAction *>(sender());
+    if (action) {
+        int brushIndex = action->data().toInt();
+        canvas->SetBrushIndex(brushIndex);
+        UpdateBrushesMenu();
+    }
+}
+
+
+void MainWindow::CreateBrushActions(){
+    for (QAction *a : BrushActions) {
+        delete a;
+    }
+    BrushActions.clear();
+    int all = canvas->GetBrushCount();
+    int thisbr = canvas->GetCurrentBrushIndex();
+    for (int i=0;i<all;++i){
+        QString Name=tr("Brush %1").arg(i + 1);
+        QAction *BrAct=new QAction(Name, this);
+        BrAct->setData(i);
+        BrAct->setCheckable(true);
+        BrAct->setChecked(i==thisbr);
+        connect(BrAct,SIGNAL(triggered()),this,SLOT(SelectBrush()));
+        BrushActions.append(BrAct);
+    }
+}
+
+
+void MainWindow::ShowBrushSelectionMenu(){
+    QMenu BrMenu(this);
+    int all=canvas->GetBrushCount();
+    if (all==0){
+        return;
+
+    }
+    else{
+        if (BrushActions.isEmpty()) {
+            CreateBrushActions();
+        }
+        else{
+            UpdateBrushesMenu();
+        }
+        for (QAction *a : BrushActions) {
+            BrMenu.addAction(a);
+        }
+    }
+    BrMenu.exec(QCursor::pos());
 }

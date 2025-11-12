@@ -24,12 +24,19 @@ private slots:
     void SetLineTool();
     void SetRectangleTool();
     void SetEllipsTool();
+    void SelectBrush();
+    void SetImageBrushTool();
+    void ShowBrushSelectionMenu();
+
+
 
 private:
     void CreateActions();
     void CreateMenus();
     bool MaybeSave();
     bool SaveFile(const QByteArray &fileFormat);
+    void UpdateBrushesMenu();
+    void CreateBrushActions();
 
     Canvas *canvas;
     QMenu *SaveAsMenu;
@@ -45,6 +52,8 @@ private:
     QAction *LineToolAct;
     QAction *RectangleToolAct;
     QAction *EllipsToolAct;
+    QAction *ImageBrushToolAct;
+    QList<QAction *> BrushActions;
 };
 
 #endif

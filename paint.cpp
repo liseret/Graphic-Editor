@@ -1,5 +1,5 @@
 #include "paint.h"
-#include <QMouseEvent>
+#include <QtWidgets>
 
 Canvas::Canvas(QWidget *parent):QWidget(parent){
     setAttribute(Qt::WA_StaticContents);
@@ -8,6 +8,8 @@ Canvas::Canvas(QWidget *parent):QWidget(parent){
     MyPenWidth=1;
     MyPenColor=Qt::black;
     CurrentShape=ShapeControl.createShape(Tool::pen,MyPenColor,MyPenWidth);
+    BruhIndex = 0;
+    LoadBruh();
 }
 
 Canvas::~Canvas(){
@@ -17,8 +19,11 @@ Canvas::~Canvas(){
 void Canvas::SetCurrentShape(Tool::Type shapeType){
     delete CurrentShape;
     CurrentShape=ShapeControl.createShape(shapeType,MyPenColor,MyPenWidth);
+    if (shapeType==Tool::bruh && !BruhImag.isEmpty()){
+        Bruh* Brush = static_cast<Bruh*>(CurrentShape);
+        Brush->SetBrushImage(BruhImag[BruhIndex]);
 }
-
+}
 bool Canvas::SaveImage(const QString &fileName,const char *fileFormat){
     QImage visibleImage=Image;
     ResizeImage(&visibleImage, size());
@@ -61,6 +66,9 @@ void Canvas::mousePressEvent(QMouseEvent *ev){
                 Pen* pen=static_cast<Pen*>(CurrentShape);
                 pen->addPoint(ev->pos());
             }
+            else if (CurrentShape->GetType() == Tool::bruh) {
+                DrawBrush(ev->pos());
+            }
         }
         PaintOrNot=true;
     }
@@ -72,6 +80,11 @@ void Canvas::mouseMoveEvent(QMouseEvent *ev){
             DrawLineTo(ev->pos());
             Pen* pen=static_cast<Pen*>(CurrentShape);
             pen->addPoint(ev->pos());
+        }
+        else if (CurrentShape->GetType() == Tool::bruh) {
+
+            CurrentShape->SetStartPoint(ev->pos());
+            DrawBrush(ev->pos());
         }
         else{
             CurrentShape->SetEndPoint(ev->pos());
@@ -87,6 +100,9 @@ void Canvas::mouseReleaseEvent(QMouseEvent *ev){
             Pen* pen=static_cast<Pen*>(CurrentShape);
             pen->addPoint(ev->pos());
         }
+        else if (CurrentShape->GetType() == Tool::bruh) {
+            DrawBrush(ev->pos());
+        }
         else{
             CurrentShape->SetEndPoint(ev->pos());
             DrawCurrentShape();
@@ -99,7 +115,7 @@ void Canvas::paintEvent(QPaintEvent *ev){
     QPainter painter(this);
     QRect dirtyRect=ev->rect();
     painter.drawImage(dirtyRect,Image,dirtyRect);
-    if (PaintOrNot && CurrentShape && CurrentShape->GetType()!=Tool::pen) {
+    if (PaintOrNot && CurrentShape && CurrentShape->GetType() != Tool::pen && CurrentShape->GetType() != Tool::bruh) {
         CurrentShape->draw(painter);
     }
 }
@@ -141,4 +157,66 @@ void Canvas::ResizeImage(QImage *image,const QSize &newSize){
     QPainter painter(&newImage);
     painter.drawImage(QPoint(0, 0),*image);
     *image=newImage;
+}
+void Canvas::LoadBruh(){
+    BruhImag.clear();
+
+    QDir brushesDir("brushes");
+    if (!brushesDir.exists()){
+        brushesDir.mkpath(".");
+        qDebug() << "Created brushes directory:" << brushesDir.absolutePath();
+        return;
+    }
+
+    QStringList filters;
+    filters<<"*.png";
+    brushesDir.setNameFilters(filters);
+
+    QStringList imageFiles = brushesDir.entryList(QDir::Files);
+
+    for (const QString &fileName : imageFiles) {
+        QString filePath = brushesDir.absoluteFilePath(fileName);
+        QImage BrushImage(filePath);
+        if (!BrushImage.isNull()) {
+            BrushImage = BrushImage.convertToFormat(QImage::Format_ARGB32);
+            BruhImag.append(BrushImage);
+        }
+    }
+
+    if (BruhImag.isEmpty()) {
+        return;
+    }
+
+}
+void Canvas::DrawBrush(const QPoint &point)
+{
+    if (!CurrentShape || CurrentShape->GetType() != Tool::bruh)
+        return;
+
+    QPainter painter(&Image);
+    CurrentShape->SetStartPoint(point);
+    CurrentShape->draw(painter);
+    Modified = true;
+
+    int brushSize = qMax(10, MyPenWidth * 5);
+    QRect updateRect(point.x() - brushSize/2, point.y() - brushSize/2,brushSize, brushSize);
+    update(updateRect);
+}
+void Canvas::SetBrushIndex(int i)
+{
+    if (i >= 0 && i < BruhImag.size()) {
+        BruhIndex = i;
+        if (CurrentShape && CurrentShape->GetType() == Tool::bruh) {
+            Bruh* brush = static_cast<Bruh*>(CurrentShape);
+            brush->SetBrushImage(BruhImag[BruhIndex]);
+        }
+        update();
+    }
+}
+QImage Canvas::GetBrushImage(int i) const
+{
+    if (i >= 0 && i < BruhImag.size()) {
+        return BruhImag[i];
+    }
+    return QImage();
 }
