@@ -52,7 +52,7 @@ void MainWindow::CreateActions(){
     EllipsToolAct->setCheckable(true);
     connect(EllipsToolAct,SIGNAL(triggered()),this,SLOT(SetEllipsTool()));
 
-    ImageBrushToolAct = new QAction(tr("Image Brush"), this);
+    ImageBrushToolAct = new QAction(tr("Brush"), this);
     ImageBrushToolAct->setCheckable(true);
     connect(ImageBrushToolAct, SIGNAL(triggered()), this, SLOT(SetImageBrushTool()));
     CreateBrushActions();
@@ -210,6 +210,9 @@ void MainWindow::CreateBrushActions(){
     for (int i=0;i<all;++i){
         QString Name=tr("Brush %1").arg(i + 1);
         QAction *BrAct=new QAction(Name, this);
+        QImage brushImage = canvas->GetBrushImage(i);
+        QImage preview = brushImage.scaled(32, 32, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        BrAct->setIcon(QIcon(QPixmap::fromImage(preview)));
         BrAct->setData(i);
         BrAct->setCheckable(true);
         BrAct->setChecked(i==thisbr);

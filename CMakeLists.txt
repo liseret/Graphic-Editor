@@ -18,12 +18,23 @@ set(PROJECT_SOURCES
         mainwindow.h
         mainwindow.ui
 )
-
+if(WIN32)
+    set(APP_ICON "${CMAKE_CURRENT_SOURCE_DIR}/icon.ico")  # Иконка в корне проекта
+    if(EXISTS ${APP_ICON})
+        set_target_properties(Graphic_editor PROPERTIES
+            RC_ICONS ${APP_ICON}  # Устанавливаем иконку для .exe файла
+        )
+        message(STATUS "Application icon found: ${APP_ICON}")
+    else()
+        message(WARNING "Application icon not found: ${APP_ICON}")
+    endif()
+endif()
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Graphic_editor
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         paint.h paint.cpp
+        res.qrc
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Graphic_editor APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
@@ -33,12 +44,15 @@ else()
     if(ANDROID)
         add_library(Graphic_editor SHARED
             ${PROJECT_SOURCES}
+            res.qrc
         )
+
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
         add_executable(Graphic_editor
             ${PROJECT_SOURCES}
+            res.qrc
         )
     endif()
 endif()
