@@ -59,7 +59,20 @@ else()
 endif()
 
 target_link_libraries(Graphic_editor PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+if(WIN32)
+    get_target_property(QT_QMAKE_EXECUTABLE Qt${QT_VERSION_MAJOR}::qmake IMPORTED_LOCATION)
+    get_filename_component(QT_BIN_DIR "${QT_QMAKE_EXECUTABLE}" DIRECTORY)
+    find_program(WINDEPLOYQT_EXECUTABLE windeployqt HINTS "${QT_BIN_DIR}")
 
+    if(WINDEPLOYQT_EXECUTABLE)
+        add_custom_command(TARGET Graphic_editor POST_BUILD
+            COMMAND "${WINDEPLOYQT_EXECUTABLE}" --no-translations "$<TARGET_FILE:Graphic_editor>"
+            COMMENT "Deploying Qt DLLs with windeployqt..."
+        )
+    else()
+        message(WARNING "snoopydog")
+    endif()
+endif()
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
